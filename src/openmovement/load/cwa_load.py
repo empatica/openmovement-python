@@ -10,6 +10,7 @@ from datetime import datetime
 from struct import *
 
 import numpy as np
+import math
 import pandas as pd
 
 from openmovement.load.base_data import BaseData
@@ -665,10 +666,24 @@ class CwaData(BaseData):
             self.labels = self.labels + ['mag_x', 'mag_y', 'mag_z']
             current_axis += 3
 
+        '''
         if self.include_light:
             if self.verbose: print('Light interpolate...', flush=True)
             # Resample light ((self.header['deviceType'] == 'AX6') values could be scaled by 10 to match AX3?)
             self.sample_values[:,current_axis] = np.interp(np.arange(0, self.df.shape[0] * self.data_format['sampleCount']), self.df['sample_index'], self.df['scale_light'] & 0x3ff)
+            self.labels = self.labels + ['light']
+            current_axis += 1
+        '''
+
+        if self.include_light:
+            if self.verbose: print('Sample data: light...', flush=True)
+            #print(self.df['scale_light'] & 0x3ff)
+            scale_light_values = self.df['scale_light'].values
+            for i in range(self.sample_values.shape[0]):
+                #lux_value = 10**(((scale_light_values[i//80] & 0x3ff)+512)*6/1024)
+                #lux_value = 10**((scale_light_values[i//80] & 0x3ff)/34.1)
+                #self.sample_values[i, current_axis] = lux_value
+                self.sample_values[i,current_axis] = scale_light_values[i//80] & 0x3ff
             self.labels = self.labels + ['light']
             current_axis += 1
 
